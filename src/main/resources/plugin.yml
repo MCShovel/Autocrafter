@@ -1,4 +1,4 @@
 main: com.norcode.bukkit.autocrafter.Autocrafter
-version: ${project.version}
+version: 1.0.LATEST
 authors: [metalhedd]
-name: ${project.name}
+name: Autocrafter
