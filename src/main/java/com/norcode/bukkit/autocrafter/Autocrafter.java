@@ -1,6 +1,7 @@
 package com.norcode.bukkit.autocrafter;
 
 import net.gravitydevelopment.updater.Updater;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -28,6 +29,8 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import com.norcode.bukkit.autocrafter.CraftAttempt;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -68,14 +71,14 @@ public class Autocrafter extends JavaPlugin implements Listener {
                     if (player != null && player.isOnline()) {
                         String autoUpdate = getConfig().getString("auto-update").toLowerCase();
                         if (!autoUpdate.equals("false")) {
-                            Updater.UpdateResult result = updater.getResult();
+                            /*Updater.UpdateResult result = updater.getResult();
                             switch (result) {
                             case SUCCESS:
                                 player.sendMessage(ChatColor.GOLD + "[AutoCrafter] " + ChatColor.WHITE + "A new update has been downloaded and is will take effect when the server restarts.");
                                 break;
                             case UPDATE_AVAILABLE:
                                 player.sendMessage(ChatColor.GOLD + "[AutoCrafter] " + ChatColor.WHITE + "A new update is available at: http://dev.bukkit.org/server-mods/autocrafter/");
-                            }
+                            }*/
                         }
                     }
                 }
@@ -90,14 +93,6 @@ public class Autocrafter extends JavaPlugin implements Listener {
             saveConfig();
         }
 		debug(" ... configuring auto-update");
-		String autoUpdate = getConfig().getString("auto-update").toLowerCase();
-        if (autoUpdate.equals("true")) {
-            updater = new Updater(this, 56042, this.getFile(), Updater.UpdateType.DEFAULT, true);
-        } else if (autoUpdate.equals("false")) {
-            getLogger().info("Auto-updater is disabled. Not checking for updates.");
-        } else {
-            updater = new Updater(this, 56042, this.getFile(), Updater.UpdateType.NO_DOWNLOAD, true);
-        }
         this.usePermissions = getConfig().getBoolean("use-permissions", true);
         noPermissionMsg = getConfig().getString("messages.no-permission", null);
 
@@ -218,6 +213,7 @@ public class Autocrafter extends JavaPlugin implements Listener {
     @EventHandler(ignoreCancelled=true)
     public void onDropperMove(InventoryMoveItemEvent event) {
         if (event.getSource().getHolder() instanceof Dropper) {
+        	debug("Dropper move?");
 			if (!sourceIsInitiator(event)) {
 				return;
 			}
@@ -287,18 +283,19 @@ public class Autocrafter extends JavaPlugin implements Listener {
     }
 
     private ItemStack getFrameItem(ItemFrame frame) {
-	ItemStack stack = frame.getItem();
-	short max = stack.getType().getMaxDurability();
-	if (max > 0 && stack.getDurability() != 0) {
-	    stack = stack.clone();
-	    stack.setDurability((short) 0);
-	}
-	return stack;
+		ItemStack stack = frame.getItem();
+		short max = stack.getType().getMaxDurability();
+		if (max > 0 && stack.getDurability() != 0) {
+		    stack = stack.clone();
+		    stack.setDurability((short) 0);
+		}
+		return stack;
     }
 
     @EventHandler(ignoreCancelled=true)
     public void onDropperFire(BlockDispenseEvent event) {
         if (event.getBlock().getType().equals(Material.DROPPER)) {
+        	debug("A dropper fired");
             final Dropper dropper = ((Dropper) event.getBlock().getState());
             if (!enabledInWorld(dropper.getWorld())) return;
             ItemFrame frame = getAttachedFrame(event.getBlock());
@@ -369,11 +366,13 @@ public class Autocrafter extends JavaPlugin implements Listener {
         }
         for (Chunk c: chunksToCheck) {
             for (Entity e: c.getEntities()) {
-                if (e.getType().getTypeId() == itemFrameEntityId  && e.getLocation().distanceSquared(dropperLoc) == 0.31640625) {
+            	debug("Dist: " + e.getLocation().distanceSquared(dropperLoc));
+                if (e.getType().getTypeId() == itemFrameEntityId  && e.getLocation().distanceSquared(dropperLoc) < 0.4) {
                     return ((ItemFrame) e);
                 }
             }
         }
+        debug("Unable to find an attached itemframe");
         return null;
     }
 }
