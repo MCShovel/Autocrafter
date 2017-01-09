@@ -1,7 +1,5 @@
 package com.norcode.bukkit.autocrafter;
 
-import net.gravitydevelopment.updater.Updater;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -48,7 +46,6 @@ public class Autocrafter extends JavaPlugin implements Listener {
     private String noPermissionMsg;
     private List<String> worldList = new ArrayList<String>();
     private Permission wildcardPerm = null;
-    private Updater updater;
 	private boolean debug = false;
 
     @Override
@@ -60,40 +57,9 @@ public class Autocrafter extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
     }
 
-    @EventHandler(ignoreCancelled=true)
-    public void onPlayerLogin(PlayerLoginEvent event) {
-        final String playerName = event.getPlayer().getName();
-        if (updater == null) return;
-        if (event.getPlayer().hasPermission("autocrafter.admin")) {
-            getServer().getScheduler().runTaskLaterAsynchronously(this, new Runnable() {
-                public void run() {
-                    Player player = getServer().getPlayer(playerName);
-                    if (player != null && player.isOnline()) {
-                        String autoUpdate = getConfig().getString("auto-update").toLowerCase();
-                        if (!autoUpdate.equals("false")) {
-                            /*Updater.UpdateResult result = updater.getResult();
-                            switch (result) {
-                            case SUCCESS:
-                                player.sendMessage(ChatColor.GOLD + "[AutoCrafter] " + ChatColor.WHITE + "A new update has been downloaded and is will take effect when the server restarts.");
-                                break;
-                            case UPDATE_AVAILABLE:
-                                player.sendMessage(ChatColor.GOLD + "[AutoCrafter] " + ChatColor.WHITE + "A new update is available at: http://dev.bukkit.org/server-mods/autocrafter/");
-                            }*/
-                        }
-                    }
-                }
-            }, 20);
-        }
-    }
     public void loadConfig() {
 		debug = getConfig().getBoolean("debug", false);
-		debug("Loading Autocrafter Config...");
-        if (!getConfig().contains("auto-update")) {
-            getConfig().set("auto-update",  "true");
-            saveConfig();
-        }
-		debug(" ... configuring auto-update");
-        this.usePermissions = getConfig().getBoolean("use-permissions", true);
+	    this.usePermissions = getConfig().getBoolean("use-permissions", true);
         noPermissionMsg = getConfig().getString("messages.no-permission", null);
 
         // world list
@@ -294,6 +260,8 @@ public class Autocrafter extends JavaPlugin implements Listener {
 
     @EventHandler(ignoreCancelled=true)
     public void onDropperFire(BlockDispenseEvent event) {
+    	debug("Block dispense: " + event.getBlock().getType());
+
         if (event.getBlock().getType().equals(Material.DROPPER)) {
         	debug("A dropper fired");
             final Dropper dropper = ((Dropper) event.getBlock().getState());
